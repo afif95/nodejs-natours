@@ -37,6 +37,7 @@ const tourSchema = new mongoose.Schema(
       default: 4.5,
       min: [1, 'rating must be above 1.0'],
       max: [5, 'rating must be below 5'],
+      set: (val) => Math.round(val * 10) / 10, // 4.66666, 46.666, 47, 4.7
     },
     ratingsQuantity: {
       type: Number,
@@ -123,6 +124,14 @@ const tourSchema = new mongoose.Schema(
   }
 );
 
+// single field index: mongodb engine will create index of price to do faster processing. related to .explain() and preview of "executionStats"
+// tourSchema.index({ price: 1 }); // commenting out will not delete index from the DB, delete explicitly
+
+tourSchema.index({ slug: 1 });
+
+// compound index (also supports single field index)
+tourSchema.index({ price: 1, ratingsAverage: -1 });
+tourSchema.index({ startLocation: '2dsphere' });
 //virtual property
 tourSchema.virtual('durationWeeks').get(function () {
   return this.duration / 7; // 'this' keyword is absent in arrow functions
@@ -183,9 +192,10 @@ tourSchema.post(/^find/, function (docs, next) {
 
 // aggregation middleware
 tourSchema.pre('aggregate', function (next) {
-  // unshift: add  another match at the beginnign of the aggregation array
-  this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
-  // console.log(this.pipeline());
+  // unshift: add  another match at the beginning of the aggregation array
+  if (!(Object.keys(this.pipeline()[0])[0] === '$geoNear')) {
+    this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
+  }
   next();
 });
 

@@ -40,7 +40,7 @@ class APIFeatures {
 
   paginate(numTours) {
     const page = this.queryString.page * 1 || 1; // converting string to number and setting default value
-    const limit = this.queryString.limit * 1 || 10;
+    const limit = this.queryString.limit * 1 || 100;
     const skip = (page - 1) * limit;
 
     this.query = this.query.skip(skip).limit(limit);

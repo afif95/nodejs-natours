@@ -48,3 +48,5 @@ process.on('unhandledRejection', (err) => {
     process.exit(1);
   });
 });
+
+// for npm run debug: use chrome://inspect
