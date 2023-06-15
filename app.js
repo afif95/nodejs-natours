@@ -11,6 +11,8 @@ const globalErrorHandler = require('./controllers/errorController');
 const tourRouter = require('./routes/tourRouters');
 const userRouter = require('./routes/userRouters');
 const reviewRouter = require('./routes/reviewRouters');
+const viewRouter = require('./routes/viewRouters');
+const cookieParser = require('cookie-parser');
 
 const app = express();
 
@@ -20,12 +22,39 @@ app.set('views', path.join(__dirname, 'views'));
 
 // GLOBAL MIDDLEWARES
 
-// serving static files
+// serving static files (all the static assets will be automatically provided in the folder called 'public')
 // app.use(express.static(`${__dirname}/public`));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // set security HTTP headers
-app.use(helmet());
+// Further HELMET configuration for Security Policy (CSP) to unblock axios HTTP and leaflet map
+const scriptSrcUrls = ['https://unpkg.com/', 'https://tile.openstreetmap.org'];
+const styleSrcUrls = [
+  'https://unpkg.com/',
+  'https://tile.openstreetmap.org',
+  'https://fonts.googleapis.com/',
+];
+const connectSrcUrls = [
+  'https://unpkg.com',
+  'https://tile.openstreetmap.org',
+  'ws://localhost:1234/',
+];
+const fontSrcUrls = ['fonts.googleapis.com', 'fonts.gstatic.com'];
+
+app.use(
+  helmet.contentSecurityPolicy({
+    directives: {
+      defaultSrc: [],
+      connectSrc: ["'self'", ...connectSrcUrls],
+      scriptSrc: ["'self'", ...scriptSrcUrls],
+      styleSrc: ["'self'", "'unsafe-inline'", ...styleSrcUrls],
+      workerSrc: ["'self'", 'blob:'],
+      objectSrc: [],
+      imgSrc: ["'self'", 'blob:', 'data:', 'https:'],
+      fontSrc: ["'self'", ...fontSrcUrls],
+    },
+  })
+);
 
 // development logging
 if (process.env.NODE_ENV === 'development') {
@@ -45,6 +74,9 @@ app.use('/api', limiter);
 
 // body parser, reading data from the body to req.body
 app.use(express.json({ limit: '10kb' }));
+// reading data from the encoded url in account.pug to req.body based on name and email attributes [form-user-data(action='/submit-user-data' method='POST')]
+app.use(express.urlencoded({ extended: true, limit: '10kb' }));
+app.use(cookieParser());
 
 // data sanitization against NoSQL query injection
 // {
@@ -83,6 +115,7 @@ app.use(
 // test middleware
 app.use((req, res, next) => {
   req.requestTime = new Date().toISOString();
+  // console.log(req.cookies);
   // console.log(req.headers);
   // console.log(x);
   // this middleware is called when there's a request. the error will be processed by global error handling middleware named errorController instead of uncaughtexception in server.js
@@ -96,9 +129,7 @@ app.use((req, res, next) => {
 // app.delete('/api/v1/tours/:id', deleteTour);
 
 //route
-app.get('/', (req, res) => {
-  res.status(200).render('base');
-});
+app.use('/', viewRouter);
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/reviews', reviewRouter);

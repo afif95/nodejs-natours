@@ -48,7 +48,7 @@ const createSendToken = catchAsync(async (user, statusCode, res) => {
     expires: new Date(
       Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
     ),
-    httpOnly: true,
+    httpOnly: true, // can't manipulate or delete the cookie in any way
   };
 
   if (process.env.NODE_ENV === 'production') cookieOptions.secure = true;
@@ -100,6 +100,14 @@ exports.login = catchAsync(async (req, res, next) => {
   await createSendToken(user, 200, res);
 });
 
+exports.logout = (req, res) => {
+  res.cookie('jwt', 'dummytoken', {
+    expires: new Date(Date.now() + 10 * 1000),
+    httpOnly: true,
+  });
+  res.status(200).json({ status: 'success' });
+};
+
 exports.protect = catchAsync(async (req, res, next) => {
   // get token and check if it's there
   let token;
@@ -108,6 +116,8 @@ exports.protect = catchAsync(async (req, res, next) => {
     req.headers.authorization.startsWith('Bearer')
   ) {
     token = req.headers.authorization.split(' ')[1];
+  } else if (req.cookies.jwt) {
+    token = req.cookies.jwt;
   }
 
   if (!token) {
@@ -145,8 +155,43 @@ exports.protect = catchAsync(async (req, res, next) => {
   // grant access to protected route
   // req travels from middleware to middleware
   req.user = currentUser;
+  // there's a logged in user; to automatically use it in the frontend templates
+  // The res.locals property is an object that contains response local variables scoped to the request and because of this, it is only available to the view(s) rendered during that request/response cycle (if any)
+  res.locals.user = currentUser;
   next();
 });
+
+// only for rendered pages, no need to catch errors instead skip to the next middleware
+exports.isLoggedIn = async (req, res, next) => {
+  try {
+    // get token and check if it's there
+    if (req.cookies.jwt) {
+      // verify token
+      const decoded = await promisify(jwt.verify)(
+        req.cookies.jwt,
+        process.env.JWT_SECRET
+      );
+
+      // check if user still exists
+      const currentUser = await User.findById(decoded.id);
+      if (!currentUser) {
+        return next();
+      }
+      // check if user changed password after the token had been issued
+      if (currentUser.passwordChangedAfter(decoded.iat)) {
+        return next();
+      }
+
+      // there's a logged in user; to automatically use it in the frontend templates
+      res.locals.user = currentUser;
+      return next();
+    }
+  } catch (err) {
+    // there's no logged in user
+    return next();
+  }
+  next();
+};
 
 exports.restrictTo =
   (...roles) =>
