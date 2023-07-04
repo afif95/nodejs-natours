@@ -578,12 +578,14 @@ var _esTypedArraySetJs = require("core-js/modules/es.typed-array.set.js");
 var _leaflet = require("./leaflet");
 var _login = require("./login");
 var _updateSettings = require("./updateSettings");
+var _stripe = require("./stripe");
 // DOM elements
 const leaflet = document.getElementById("map");
 const loginForm = document.querySelector(".form--login");
 const logOutBtn = document.querySelector(".nav__el--logout");
 const userDataForm = document.querySelector(".form-user-data");
 const userPasswordForm = document.querySelector(".form-user-password");
+const bookBtn = document.getElementById("book-tour");
 // delegation
 if (leaflet) {
     const locations = JSON.parse(leaflet.dataset.locations);
@@ -599,12 +601,11 @@ if (loginForm) loginForm.addEventListener("submit", (e)=>{
 if (logOutBtn) logOutBtn.addEventListener("click", (0, _login.logout));
 if (userDataForm) userDataForm.addEventListener("submit", (e)=>{
     e.preventDefault();
-    const name = document.getElementById("name").value;
-    const email = document.getElementById("email").value;
-    (0, _updateSettings.updateSettings)({
-        name,
-        email
-    }, "data");
+    const form = new FormData();
+    form.append("name", document.getElementById("name").value);
+    form.append("email", document.getElementById("email").value);
+    form.append("photo", document.getElementById("photo").files[0]);
+    (0, _updateSettings.updateSettings)(form, "data");
 });
 if (userPasswordForm) userPasswordForm.addEventListener("submit", async (e)=>{
     e.preventDefault();
@@ -622,8 +623,13 @@ if (userPasswordForm) userPasswordForm.addEventListener("submit", async (e)=>{
     document.getElementById("password").value = "";
     document.getElementById("password-confirm").value = "";
 });
+if (bookBtn) bookBtn.addEventListener("click", (e)=>{
+    e.target.textContent = "processing...";
+    const { tourId  } = e.target.dataset;
+    (0, _stripe.bookTour)(tourId);
+});
 
-},{"core-js/modules/es.regexp.flags.js":"fQ4Rj","core-js/modules/es.typed-array.set.js":"f7dgH","./leaflet":"IkyKu","./login":"lGrf1","./updateSettings":"frV4k"}],"fQ4Rj":[function(require,module,exports) {
+},{"core-js/modules/es.regexp.flags.js":"fQ4Rj","core-js/modules/es.typed-array.set.js":"f7dgH","./leaflet":"IkyKu","./login":"lGrf1","./updateSettings":"frV4k","./stripe":"geOUa"}],"fQ4Rj":[function(require,module,exports) {
 var global = require("c6bf5eee641c0bcc");
 var DESCRIPTORS = require("32574bd865b8e6e5");
 var defineBuiltInAccessor = require("ba3ead2b02aa5c9b");
@@ -1898,6 +1904,29 @@ const updateSettings = async (data, type)=>{
         }
     } catch (err) {
         (0, _alerts.showAlert)("error", err.response.data.message);
+    }
+};
+
+},{"./alerts":"7AVmO","@parcel/transformer-js/src/esmodule-helpers.js":"iDzFb"}],"geOUa":[function(require,module,exports) {
+/* eslint-disable */ var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "bookTour", ()=>bookTour);
+var _alerts = require("./alerts");
+const stripe = Stripe("pk_test_51NPfK6FKSSyfwekjEM1kRbs1o8rx9vhOwuH1jlH5Ny2ab5PUkadDtR9g3bRCfyPUhnEHkjQayik9qe3S9p2943nJ00OvDbNEJh");
+const bookTour = async (tourId)=>{
+    try {
+        // get checkout session from backend API
+        const session = await axios({
+            url: `/api/v1/bookings/checkout-session/${tourId}`
+        });
+        console.log(session);
+        // create checkout form + charge credit card
+        await stripe.redirectToCheckout({
+            sessionId: session.data.session.id
+        });
+    } catch (err) {
+        console.log(err);
+        (0, _alerts.showAlert)("error", err);
     }
 };
 

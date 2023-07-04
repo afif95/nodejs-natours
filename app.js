@@ -11,6 +11,7 @@ const globalErrorHandler = require('./controllers/errorController');
 const tourRouter = require('./routes/tourRouters');
 const userRouter = require('./routes/userRouters');
 const reviewRouter = require('./routes/reviewRouters');
+const bookingRouter = require('./routes/bookingRouters');
 const viewRouter = require('./routes/viewRouters');
 const cookieParser = require('cookie-parser');
 
@@ -28,7 +29,11 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // set security HTTP headers
 // Further HELMET configuration for Security Policy (CSP) to unblock axios HTTP and leaflet map
-const scriptSrcUrls = ['https://unpkg.com/', 'https://tile.openstreetmap.org'];
+const scriptSrcUrls = [
+  'https://unpkg.com/',
+  'https://tile.openstreetmap.org',
+  'https://*.stripe.com',
+];
 const styleSrcUrls = [
   'https://unpkg.com/',
   'https://tile.openstreetmap.org',
@@ -38,6 +43,7 @@ const connectSrcUrls = [
   'https://unpkg.com',
   'https://tile.openstreetmap.org',
   'ws://localhost:1234/',
+  'https://*.stripe.com',
 ];
 const fontSrcUrls = ['fonts.googleapis.com', 'fonts.gstatic.com'];
 
@@ -48,10 +54,11 @@ app.use(
       connectSrc: ["'self'", ...connectSrcUrls],
       scriptSrc: ["'self'", ...scriptSrcUrls],
       styleSrc: ["'self'", "'unsafe-inline'", ...styleSrcUrls],
-      workerSrc: ["'self'", 'blob:'],
+      workerSrc: ["'self'", 'blob:', 'https://*.stripe.com'],
       objectSrc: [],
-      imgSrc: ["'self'", 'blob:', 'data:', 'https:'],
+      imgSrc: ["'self'", 'blob:', 'data:', 'https:', 'https://*.stripe.com'],
       fontSrc: ["'self'", ...fontSrcUrls],
+      frameSrc: ["'self'", 'https://*.stripe.com'],
     },
   })
 );
@@ -133,6 +140,7 @@ app.use('/', viewRouter);
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/reviews', reviewRouter);
+app.use('/api/v1/bookings', bookingRouter);
 
 app.all('*', (req, res, next) => {
   // passing arg: express skips all the other middlewares as it knows there's error and moves to error handling middleware

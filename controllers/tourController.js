@@ -1,7 +1,76 @@
+const multer = require('multer');
+const sharp = require('sharp');
 const Tour = require('../models/tourModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 const factory = require('./handlerFactory');
+const { async } = require('regenerator-runtime');
+
+const multerStorage = multer.memoryStorage();
+
+const multerFilter = (req, file, cb) => {
+  if (file.mimetype.startsWith('image')) {
+    cb(null, true);
+  } else {
+    cb(new AppError('only images!', 400), false);
+  }
+};
+// using multer without options will result in storing the images on memory instead of disk
+// body-parser can't handle files, that's why we need the multer package
+const upload = multer({
+  storage: multerStorage,
+  fileFilter: multerFilter,
+});
+
+exports.uploadTourImages = upload.fields([
+  { name: 'imageCover', maxCount: 1 },
+  { name: 'images', maxCount: 3 },
+]);
+
+// upload.single('image'); // req.file
+// upload.array('images', 5); // req.files
+
+exports.resizeTourImages = catchAsync(async (req, res, next) => {
+  if (!req.files.imageCover || !req.files.images) return next();
+
+  // Cover Image
+  req.body.imageCover = `tour-${req.params.id}-${Date.now()}-cover.jpeg`;
+
+  // it's better to sharpen images on memory instead of disk
+  await sharp(req.files.imageCover[0].buffer)
+    // resizing as square
+    .resize(2000, 1333)
+    // format to jpeg file format
+    .toFormat('jpeg')
+    // compression
+    .jpeg({ quality: 90 })
+    .toFile(`public/img/tours/${req.body.imageCover}`);
+
+  // Images
+  req.body.images = [];
+
+  // be careful when using async await inside 'foreach' or 'map' because instead of pausing each iteration of the loop, all the promises will run concurrently ultimately calling next() without resolving the promises and resulting in the array req.body.images being empty
+  // Promises.all will resolve all the promises
+  await Promise.all(
+    req.files.images.map(async (file, i) => {
+      const filename = `tour-${req.params.id}-${Date.now()}-${i + 1}.jpeg`;
+
+      // it's better to sharpen images on memory instead of disk
+      await sharp(file.buffer)
+        // resizing as square
+        .resize(2000, 1333)
+        // format to jpeg file format
+        .toFormat('jpeg')
+        // compression
+        .jpeg({ quality: 90 })
+        .toFile(`public/img/tours/${filename}`);
+
+      req.body.images.push(filename);
+    })
+  );
+
+  next();
+});
 
 exports.aliasTopTours = (req, res, next) => {
   req.query.limit = 5;
