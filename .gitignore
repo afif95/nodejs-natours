@@ -1,4 +1,4 @@
-.cache/
-.parcel-cache/
+.cache
+.parcel-cache
 config.env
 node_modules
