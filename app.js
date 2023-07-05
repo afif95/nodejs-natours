@@ -7,6 +7,7 @@ const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
 const hpp = require('hpp');
 const cookieParser = require('cookie-parser');
+const bodyParser = require('body-parser');
 const compression = require('compression');
 const enforce = require('express-sslify');
 const cors = require('cors');
@@ -105,7 +106,7 @@ app.use('/api', limiter);
 // STRIPE needs the body in raw format not in json format, so it's before the json body parser
 app.post(
   '/webhooks-checkout',
-  express.raw({ type: 'application/json' }),
+  bodyParser.json({ type: 'application/json' }),
   bookingController.webhooksCheckout
 );
 
