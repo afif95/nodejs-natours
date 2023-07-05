@@ -22,7 +22,7 @@ const viewRouter = require('./routes/viewRouters');
 const app = express();
 
 // This simple module enforces HTTPS connections on any incoming GET and HEAD requests. In case of a non-encrypted HTTP request, express-sslify automatically redirects to an HTTPS address using a 301 permanent redirect. Any other type of request (e.g., POST) will fail with a 403 error message.
-if (process.env.NODE_ENV === 'production') app.use(enforce.HTTPS());
+// if (process.env.NODE_ENV === 'production') app.use(enforce.HTTPS());
 
 app.set('view engine', 'pug');
 // path is used to prevent bugs, automatically takes care of slashes etc.
