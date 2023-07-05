@@ -6,23 +6,45 @@ const helmet = require('helmet');
 const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
 const hpp = require('hpp');
+const cookieParser = require('cookie-parser');
+const compression = require('compression');
+const enforce = require('express-sslify');
+const cors = require('cors');
 const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controllers/errorController');
 const tourRouter = require('./routes/tourRouters');
 const userRouter = require('./routes/userRouters');
 const reviewRouter = require('./routes/reviewRouters');
 const bookingRouter = require('./routes/bookingRouters');
+const bookingController = require('./controllers/bookingController');
 const viewRouter = require('./routes/viewRouters');
-const cookieParser = require('cookie-parser');
-const compression = require('compression');
 
 const app = express();
+
+// This simple module enforces HTTPS connections on any incoming GET and HEAD requests. In case of a non-encrypted HTTP request, express-sslify automatically redirects to an HTTPS address using a 301 permanent redirect. Any other type of request (e.g., POST) will fail with a 403 error message.
+if (process.env.NODE_ENV === 'production') app.use(enforce.HTTPS());
 
 app.set('view engine', 'pug');
 // path is used to prevent bugs, automatically takes care of slashes etc.
 app.set('views', path.join(__dirname, 'views'));
 
 // GLOBAL MIDDLEWARES
+
+// implement CORS (Cross Origin Resource Sharing)
+// for simple requests: GET, HEAD, POST
+app.use(cors());
+// Access-Control-Allow_origin *
+// for subdomains: ex: frontend is at natours.com & backend is at api.natours.com. this would allow the frontend to request from the backend:
+// app.use(
+//   cors({
+//     origin: 'https://www.natours.com',
+//   })
+// );
+
+// for non-simple requests, allow for all routes
+app.options('*', cors());
+// non simple requests for specific routes
+// app.options('/api/v1/tours/:id', cors());
 
 // serving static files (all the static assets will be automatically provided in the folder called 'public')
 // app.use(express.static(`${__dirname}/public`));
@@ -79,6 +101,13 @@ const limiter = rateLimit({
   message: 'too many requests from this IP, try again in an hour',
 });
 app.use('/api', limiter);
+
+// STRIPE needs the body in raw format not in json format, so it's before the json body parser
+app.post(
+  '/webhooks-checkout',
+  express.raw({ type: 'application/json' }),
+  bookingController.webhooksCheckout
+);
 
 // body parser, reading data from the body to req.body
 app.use(express.json({ limit: '10kb' }));

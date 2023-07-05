@@ -49,4 +49,11 @@ process.on('unhandledRejection', (err) => {
   });
 });
 
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received. shutting down gracefully.');
+  server.close(() => {
+    console.log('process terminated!');
+  });
+});
+
 // for npm run debug: use chrome://inspect
