@@ -106,7 +106,7 @@ app.use('/api', limiter);
 // STRIPE needs the body in raw format not in json format, so it's before the json body parser
 app.post(
   '/webhooks-checkout',
-  bodyParser.json({ type: 'application/json' }),
+  bodyParser.raw({ type: 'application/json' }),
   bookingController.webhooksCheckout
 );
 

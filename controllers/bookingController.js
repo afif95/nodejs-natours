@@ -69,7 +69,7 @@ const createBookingCheckout = async (session) => {
   await Booking.create({ tour, user, price });
 };
 
-exports.webhooksCheckout = (req, res, next) => {
+exports.webhooksCheckout = catchAsync(async (req, res, next) => {
   const signature = req.headers['stripe-signature'];
   let event;
   try {
@@ -79,16 +79,16 @@ exports.webhooksCheckout = (req, res, next) => {
       process.env.STRIPE_WEBHOOK_SECRET
     );
   } catch (err) {
-    return res.status(400).send(`webhook error: ${err.message}`);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
   console.log('webhook test 1');
 
   if (event.type === 'checkout.session.completed')
-    createBookingCheckout(event.data.object);
+    await createBookingCheckout(event.data.object);
 
   res.status(200).json({ received: true });
-};
+});
 
 // exports.createBookingCheckout = catchAsync(async (req, res, next) => {
 //   // this is temporary as it's unsecured because everyone can make bookings without paying by inserting any random tour,user, price data in the url
