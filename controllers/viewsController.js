@@ -4,6 +4,15 @@ const Booking = require('../models/bookingModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 
+exports.alerts = (req, res, next) => {
+  const { alert } = req.query;
+  if (alert === 'booking')
+    // The res.locals property is an object that contains response local variables scoped to the request and because of this, it is only available to the view(s) rendered during that request/response cycle (if any)
+    // check base.pug template
+    res.locals.alert =
+      "Booking successful! Check email for confimation. If booking doesn't show up immediately, come back later.";
+  next();
+};
 exports.getOverview = catchAsync(async (req, res, next) => {
   // get tour data from collection
   const tours = await Tour.find();
