@@ -57,10 +57,12 @@ npm run start:dev
 # Deployed project
 https://abk-natours.onrender.com
 
-It will not work as it was Deployed on a free tier
+It may not work all the time as it was Deployed on a free tier
 
 # Branch Contains the project: main
 full project + 3 postman files and 4 mongodb collections are in this branch 
 # postman published at:
 https://documenter.getpostman.com/view/18431775/2s93kz65Xd#77b42496-5e12-45e2-b84f-c92671e02adb
 
+# user account password (encrypted in users.json): 
+test1234
