@@ -44,6 +44,7 @@ SENDGRID_EMAIL_FROM=
 
 #### STRIPE (payment)
 STRIPE_SECRET_KEY=
+
 STRIPE_WEBHOOK_SECRET=
 
 #### Commands to execute
