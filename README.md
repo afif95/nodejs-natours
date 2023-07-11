@@ -58,7 +58,7 @@ npm run start:dev
 # Deployed project
 https://abk-natours.onrender.com
 
-It may not work all the time as it was Deployed on a free tier
+It may not work all the time as it was deployed on a free tier
 
 # Branch Containing the project: main
 full project + 3 postman files and 4 mongodb collections are in this branch 
