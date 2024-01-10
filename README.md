@@ -67,3 +67,5 @@ https://documenter.getpostman.com/view/18431775/2s93kz65Xd#77b42496-5e12-45e2-b8
 
 # user account password (encrypted in users.json): 
 test1234
+
+only read access is enabled in mongodb atlas.
