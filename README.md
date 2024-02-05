@@ -22,7 +22,7 @@ Welcome to the Tour Management Web Application! This comprehensive web applicati
 
 **Visibility**: Tours are visible to all users.
 
-**Map Integration**: Utilizes Mapbox to display different locations of each tour.
+**Map Integration**: Utilizes Leaflet to display different locations of each tour.
 
 ## Bookings
 **Booking Process**: Only regular users can book tours and make payments securely using the Stripe API.
@@ -69,7 +69,7 @@ Welcome to the Tour Management Web Application! This comprehensive web applicati
 
 **Cloud Platforms**: MongoDB Atlas, Heroku
 
-**Map Integration**: Mapbox
+**Map Integration**: Leaflet
 
 <img src="project screenshots/01.png" alt="drawing"/>
 <img src="project screenshots/1.png" alt="drawing"/>
