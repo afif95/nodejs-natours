@@ -67,7 +67,7 @@ Welcome to the Tour Management Web Application! This comprehensive web applicati
 
 **Email**: NodeMailer, Mailtrap, Sendgrid
 
-**Cloud Platforms**: MongoDB Atlas, Heroku
+**Cloud Platforms**: MongoDB Atlas, Render
 
 **Map Integration**: Leaflet
 
